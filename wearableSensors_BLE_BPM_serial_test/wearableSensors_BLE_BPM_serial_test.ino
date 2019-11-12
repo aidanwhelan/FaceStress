@@ -180,22 +180,28 @@ void setup(void)
 /**************************************************************************/
 void loop(void)
 {
+  Serial.println(F("I'm in the loop"));
   // Check for user input
   int myBPM = pulseSensor.getBeatsPerMinute();
   char inputs[BUFSIZE+1];
   char sBPM[4];
   bool trigger = false;
   
-  if (pulseSensor.sawStartOfBeat()) {           
+  if (pulseSensor.sawStartOfBeat()) {  
+    Serial.println(F("I got a beat"));         
     trigger = true;
     strcpy(inputs, "BPM: ");
     strcat(inputs, itoa(myBPM, sBPM, 10));
+    Serial.println(inputs);
   }
 
-  
+  Serial.println(trigger);
+  Serial.println(BUFSIZE);
 
-  if ( getUserInput(inputs, BUFSIZE, trigger) )
+  //if ( getUserInput(inputs, BUFSIZE, trigger) )
+  if(trigger == true)
   {
+    Serial.println(F("Am I in here?"));
     // Send characters to Bluefruit
     Serial.print("[Send] ");
     Serial.println(inputs);
