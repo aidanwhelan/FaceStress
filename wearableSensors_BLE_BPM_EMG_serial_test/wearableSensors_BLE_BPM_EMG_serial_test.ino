@@ -195,9 +195,10 @@ void loop(void)
   if (pulseSensor.sawStartOfBeat()) {          
     trigger = true;
     strcpy(inputs, " ");
-    strcpy(inputs2," ");
+    strcpy(inputs2,",");
     strcat(inputs, itoa(myBPM, sBPM, 10));
     strcat(inputs2, itoa(myEMG, sEMG, 10));
+    strcat(inputs,inputs2);
     //Serial.println(inputs);
   }
 
@@ -210,11 +211,11 @@ void loop(void)
     Serial.print("[Send] ");
     delay(2000);
     Serial.println(inputs);
-    Serial.println(inputs2);
+    //Serial.println(inputs2);
 
     ble.print("AT+BLEUARTTX=");
     ble.println(inputs);
-    ble.println(inputs2);
+    //ble.println(inputs2);
 
     // check response stastus
     if (! ble.waitForOK() ) {
