@@ -70,31 +70,13 @@ const int PulseWire = A7;       // PulseSensor PURPLE WIRE connected to ANALOG P
 int Threshold = 550;           // Determine which Signal to "count as a beat" and which to ignore.
                                // Use the "Gettting Started Project" to fine-tune Threshold Value beyond default setting.
                                // Otherwise leave the default "550" value. 
-const int analogInPin = A11;
-const int analogOutPin = 9;
-int sensorValue = 0;        // value read from the pot
-int outputValue = 0;        // value output to the PWM (analog out)
+const int analogInPin = A11;  //pin for EMG data
+int sensorValue = 0;
+int outputValue = 0;
                                
 PulseSensorPlayground pulseSensor;  // Creates an instance of the PulseSensorPlayground object called "pulseSensor" 
-// Create the bluefruit object, either software serial...uncomment these lines
-/*
-SoftwareSerial bluefruitSS = SoftwareSerial(BLUEFRUIT_SWUART_TXD_PIN, BLUEFRUIT_SWUART_RXD_PIN);
 
-Adafruit_BluefruitLE_UART ble(bluefruitSS, BLUEFRUIT_UART_MODE_PIN,
-                      BLUEFRUIT_UART_CTS_PIN, BLUEFRUIT_UART_RTS_PIN);
-*/
-
-/* ...or hardware serial, which does not need the RTS/CTS pins. Uncomment this line */
 Adafruit_BluefruitLE_UART ble(Serial1, BLUEFRUIT_UART_MODE_PIN);
-
-/* ...hardware SPI, using SCK/MOSI/MISO hardware SPI pins and then user selected CS/IRQ/RST */
-//Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
-
-/* ...software SPI, using SCK/MOSI/MISO user-defined SPI pins and then user selected CS/IRQ/RST */
-//Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_SCK, BLUEFRUIT_SPI_MISO,
-//                             BLUEFRUIT_SPI_MOSI, BLUEFRUIT_SPI_CS,
-//                             BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
-
 
 // A small helper
 void error(const __FlashStringHelper*err) {
@@ -113,9 +95,19 @@ void setup(void)
   while (!Serial);  // required for Flora & Micro
   delay(500);
 
-  Serial.begin(9600);
+  Serial.begin(115200);
 
-  
+  //////////////BPM//////////////////
+  // Configure the PulseSensor object, by assigning our variables to it. 
+  pulseSensor.analogInput(PulseWire);   
+  //pulseSensor.blinkOnPulse(LED13);       //auto-magically blink Arduino's LED with heartbeat.
+  pulseSensor.setThreshold(Threshold);   
+
+  // Double-check the "pulseSensor" object was created and "began" seeing a signal. 
+//   if (pulseSensor.begin()) {
+//    Serial.println("We created a pulseSensor Object !");  //This prints one time at Arduino power-up,  or on Arduino reset.  
+//  }
+  ///////////////////////////////////
   
   Serial.println(F("Adafruit Bluefruit Command Mode Example"));
   Serial.println(F("---------------------------------------"));
@@ -175,22 +167,38 @@ void setup(void)
 void loop(void)
 {
   // Check for user input
+  //int myBPM = pulseSensor.getBeatsPerMinute();
   int myEMG = analogRead(analogInPin);
   char inputs[BUFSIZE+1];
+  char inputs2[BUFSIZE+1];
+  //char sBPM[4];
   char sEMG[4];
-  bool trigger = true;
-  strcpy(inputs, "EMG: ");
-  strcat(inputs, itoa(myEMG, sEMG, 10));
+  bool trigger = false;
+  
+  if (pulseSensor.sawStartOfBeat()) {          
+    trigger = true;
+    strcpy(inputs, " ");
+    //strcpy(inputs2,",");
+    //strcat(inputs, itoa(myBPM, sBPM, 10));
+    strcat(inputs, itoa(myEMG, sEMG, 10));
+    //strcat(inputs,inputs2);
+    //Serial.println(inputs);
+  }
+
   
 
-  if ( getUserInput(inputs, BUFSIZE, trigger) )
+  //if ( getUserInput(inputs, BUFSIZE, trigger) )
+  if(trigger == true)
   {
     // Send characters to Bluefruit
     Serial.print("[Send] ");
+    delay(2000);
     Serial.println(inputs);
+    //Serial.println(inputs2);
 
     ble.print("AT+BLEUARTTX=");
     ble.println(inputs);
+    //ble.println(inputs2);
 
     // check response stastus
     if (! ble.waitForOK() ) {
