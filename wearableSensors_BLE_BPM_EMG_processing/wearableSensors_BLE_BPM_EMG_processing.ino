@@ -107,6 +107,20 @@ void error(const __FlashStringHelper*err) {
             automatically on startup)
 */
 /**************************************************************************/
+
+int bpmWin [20] = { };
+int emgWin [20] = { };
+int count = 20;
+int bpmTemp = 0;
+int emgTemp = 0;
+int i = 0;
+int j = 0;
+int k = 0;
+int bpmAvg = 0;
+int emgAvg = 0;
+int bpmRange = 0;
+int emgRange = 0;
+
 void setup(void)
 {
   while (!Serial);  // required for Flora & Micro
@@ -177,14 +191,10 @@ void setup(void)
 
   // HERE, SET UP CALIBRATION WINDOW
   // Window should last for 40 seconds (20 data collections, .5 Hz)
-  Serial.println(F("BEGINNING CALIBRATION"));
-  Serial.println(F("Please wait 40 seconds..."));
-  int bpmWin [20] = { };
-  int emgWin [20] = { };
-  int count = 20;
-  int bpmTemp = 0;
-  int emgTemp = 0;
-  for(int i = 0; i < count; i++)
+  Serial.println(("BEGINNING CALIBRATION"));
+  Serial.println(("Please wait 40 seconds..."));
+  
+  for(i = 0; i < count; i++)
   {
     bpmTemp = pulseSensor.getBeatsPerMinute();
     emgTemp = analogRead(analogInPin);
@@ -192,24 +202,22 @@ void setup(void)
     emgWin[i] = emgTemp;
     delay(2000);  //wait 2 sec
   }
-  Serial.println(F("Calibration Complete!));
+  Serial.println(("Calibration Complete!"));
   //print BPM array for validation
-  Serial.println(F("BMP Window: "));
-  for(int j = 0; j < count; j++);
+  Serial.print(("BMP Window: "));
+  for(j = 0; j < count; j++);
   {
-    Serial.print(bpmTemp[j]);
+    Serial.println(bpmWin[j]);
   }
   //print EMG array for validation
-  Serial.println(F("EMG Window: "));
-  for(int k = 0; k < count; k++);
+  Serial.print(("EMG Window: "));
+  for(k = 0; k < count; k++);
   {
-    Serial.print(emgTemp[k]);
+    Serial.println(emgWin[k]);
   }
 
   //calculate average value for each window
   //in implementation, if there are more than n data values past a certain threshold greater than the calibrated avg, send a warning (in a window of 20, if 10 points are greater than the avg by 50%, send warning)
-  int bpmAvg = 0;
-  int emgAvg = 0;
   for(i = 0; i < count; i++)
   {
     bpmAvg = bpmAvg + bpmWin[i];
@@ -217,10 +225,10 @@ void setup(void)
   }
   bpmAvg = bpmAvg / count;
   emgAvg = emgAvg / count;
-  Serial.println(F("Avg BPM: "));
-  Serial.print(bpmAvg);
-  Serial.println(F("Avg EMG: "));
-  Serial.print(emgAvg);
+  Serial.print(("Avg BPM: "));
+  Serial.println(bpmAvg);
+  Serial.print(("Avg EMG: "));
+  Serial.println(emgAvg);
 
   //calculate tolerance by finding the range between the max and min values for both BPM and EMG windows
   int bpmMax = bpmWin[0];
@@ -246,8 +254,8 @@ void setup(void)
       emgMin = emgWin[i];
     }
   }
-  int bpmRange = bpmMax - bpmMin;
-  int emgRange = emgMax - emgMin;
+  bpmRange = bpmMax - bpmMin;
+  emgRange = emgMax - emgMin;
   
 }
 
@@ -263,6 +271,7 @@ void loop(void)
   int myBPM = pulseSensor.getBeatsPerMinute();
   int myEMG = analogRead(analogInPin);
   //shift all values in the window down by one, then add the new value to the end
+  i = 0;
   for(i = 0; i < count-1; i++)
   {
     bpmWin[i] = bpmWin[i+1];
@@ -284,10 +293,12 @@ void loop(void)
       emgCount = emgCount + 1;
     }
   }
+  Serial.println(bpmCount);
+  Serial.println(emgCount);
   //evaluate number of unacceptable values in current window and set message to user
   char result[BUFSIZE +  1];
   bool trigger = false;
-  if((bpmCount >= 10) && (emgCount >= 10))
+  if((bpmCount >= 2) && (emgCount >= 2))
   {
     strcpy(result, "HALP");
     trigger = true;
