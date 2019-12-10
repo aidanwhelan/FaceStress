@@ -6,6 +6,8 @@ iOS app for use with Bluefruit Bluetooth LE modules and dev boards from Adafruit
 
 Work in progress!
 
+**Notifications App added by Madeline Fain - IU Bloomington, 2019**
+
 ## App Versions
 
 - Master branch is for version 3.x of the app (iOS) 
